@@ -23,7 +23,8 @@ import echarts from "echarts/lib/echarts";<br>
              }}
   />	
   ```
-  组件参数说明:
+  组件参数说明:<br>
+  ---
     * option: PropTypes.object, //图表option<br>
     * extraOption: PropTypes.object, //图表额外配置<br>
     * elStyle: PropTypes.object, //图表容器样式<br>
