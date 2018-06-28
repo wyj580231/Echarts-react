@@ -2,7 +2,8 @@
 基于echarts封装的React中可用的图表组件,添加了一些自定义的功能,现已加入在一块区域上可用全屏放大图表的自定义功能(传入fullScreen参数,reference为全屏参照对象的选择器),
 后续用到会再添加,默认tooltip工具栏是鼠标悬停到图表上显示,移出图表隐藏
 需要先引入echarts并传入到组件的props,按需引入echarts所需的组件,如pie\bar\title等
-import "echarts/lib/component/tooltip"; 
+--
+import "echarts/lib/component/tooltip";\n
 import "echarts/lib/component/toolbox"; 
 import "echarts/lib/component/grid"; 
 import "echarts/lib/component/legend"; 
@@ -21,6 +22,7 @@ import echarts from "echarts/lib/echarts";
              }}
   />	
   组件参数说明:
+  ===
     option: PropTypes.object, //图表option
     extraOption: PropTypes.object, //图表额外配置
     elStyle: PropTypes.object, //图表容器样式
