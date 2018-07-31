@@ -17,19 +17,19 @@ export default class ECharts extends React.Component {
     showLoading: PropTypes.bool, //是否显示图表的等待状态
     events: PropTypes.object, //绑定的事件,参数形如{click:(params)=>{}}
     callback: PropTypes.func, //回调函数,可以在其中绑定未列出的事件
-    menuOption: PropTypes.object, //头部菜单选项,可配置按钮,若已有功能不足,可以传入额外的按钮配置,是否全屏传入对象(reference为全屏的参照对象),其他传入对应的方法
+    showFullscreen: PropTypes.bool, //是否显示全屏按钮
     toolboxMode: PropTypes.string, //图表工具栏显示选项,可选show一直显示,hover鼠标悬浮显示,none不显示,
     legendMode: PropTypes.string //图例显示选项,可选show一直显示,hover鼠标悬浮显示,none不显示,
   };
   static defaultProps = {
     option: {},
     extraOption: { notMerge: true },
-    elStyle: { width: "100%", height: "200px", border: "solid 1px #000" },
+    elStyle: {},
     theme: "default",
     showLoading: false,
     events: {},
     callback: () => {},
-    menuOption: {},
+    showFullscreen: true,
     toolboxMode: "hover",
     legendMode: "show"
   };
@@ -42,13 +42,13 @@ export default class ECharts extends React.Component {
       showLoading,
       events,
       callback,
-      menuOption,
+      showFullscreen,
       toolboxMode,
       legendMode
     } = this.props; //外部传入的data数据
     let toolbox = option.toolbox || { feature: {} };
     let self = this;
-    if (menuOption.fullScreen) {
+    if (showFullscreen) {
       toolbox.feature.myFullScreen = {
         show: true,
         title: "全屏",
@@ -98,25 +98,7 @@ export default class ECharts extends React.Component {
   }
   4;
   handleFullScreen(self) {
-    const { menuOption: { fullScreen: { reference } } } = self.props;
-    if (self.state.isFullScreen) {
-      self.setState({ isFullScreen: false });
-      $(reference).css({
-        position: self.referenceInfo.position,
-        overflow: self.referenceInfo.overflow
-      });
-    } else {
-      let height = $(reference).height(),
-        width = $(reference).width();
-      self.referenceInfo = {
-        width,
-        height,
-        overflow: $(reference).css("overflow"),
-        position: $(reference).css("position")
-      };
-      $(reference).css({ overflow: "hidden", position: "relative" });
-      self.setState({ isFullScreen: true, height, width });
-    }
+    self.setState({ isFullScreen: !self.state.isFullScreen });
     function resizeChart(time) {
       $("#subloading").css("display", "");
       setTimeout(() => {
@@ -124,18 +106,6 @@ export default class ECharts extends React.Component {
         $("#subloading").css("display", "none");
       }, time);
     }
-    //锁定窗口大小
-    function freezeScreen() {
-      if (this.state.isFullScreen) {
-        let height = $(reference).height(),
-          width = $(reference).width();
-        self.setState({ height, width });
-        resizeChart(10);
-      }
-    }
-    $(window).resize(() => {
-      this.throttle(freezeScreen, 50, this);
-    });
     resizeChart(100);
   }
   handleOver() {
@@ -199,9 +169,9 @@ export default class ECharts extends React.Component {
         style={
           isFullScreen ? (
             {
-              position: "absolute",
-              width,
-              height,
+              position: "fixed",
+              width: "100%",
+              height: "100%",
               backgroundColor: "#fff",
               zIndex: "999",
               top: "0",
