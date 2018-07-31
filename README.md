@@ -10,8 +10,7 @@ import "echarts/lib/component/legend";<br>
 import echarts from "echarts/lib/echarts";<br>
 ```javascript
  <ECharts
-     menuOption={{
-     fullScreen: { reference: '.ClassName' }}}
+     showFullscreen
      echarts={echarts}
      option={benchYBGetByBubble}
      elStyle={{
@@ -32,6 +31,6 @@ import echarts from "echarts/lib/echarts";<br>
     * showLoading: PropTypes.bool, //是否显示图表的等待状态<br>
     * events: PropTypes.object, //绑定的事件,参数形如{click:(params)=>{}}<br>
     * callback: PropTypes.func, //回调函数,可以在其中绑定未列出的事件<br>
-    * menuOption: PropTypes.object, //头部菜单选项,可配置按钮,若已有功能不足,可以传入额外的按钮配置,是否全屏传入对象(reference为全屏的参照对象),其他传入对应的方法<br>
+    * showFullcrenn :PropTypes.bool ,//是否显示全屏按钮<br>
     * toolboxMode: PropTypes.string, //图表工具栏显示选项,可选show一直显示,hover鼠标悬浮显示,none不显示,<br>
     * legendMode: PropTypes.string //图例显示选项,可选show一直显示,hover鼠标悬浮显示,none不显示,<br>
