@@ -34,3 +34,7 @@ import echarts from "echarts/lib/echarts";<br>
     * showFullcrenn :PropTypes.bool ,//是否显示全屏按钮<br>
     * toolboxMode: PropTypes.string, //图表工具栏显示选项,可选show一直显示,hover鼠标悬浮显示,none不显示,<br>
     * legendMode: PropTypes.string //图例显示选项,可选show一直显示,hover鼠标悬浮显示,none不显示,<br>
+    
+   20180906新增:<br>
+   ---
+   添加可以拖动微调改变图表原点功能,用于某些时候echarts自动计算到的min值不准确的情况,默认开启,关闭设置showMovePiece为false
