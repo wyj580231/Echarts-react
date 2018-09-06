@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import $ from "jquery";
+import styles from "./ECharts.scss";
 export default class ECharts extends React.Component {
   constructor(props) {
     super(props);
@@ -8,8 +9,13 @@ export default class ECharts extends React.Component {
     this.state = {
       isFullScreen: false //是否全屏
     };
+    this.handleMovePieceAction = this.handleMovePieceAction.bind(this);
+    this.allowMove = false;
   }
   static propTypes = {
+    xAxisFixedNumber: PropTypes.number, //当移动坐标轴时格式化显示小数位数
+    yAxisFixedNumber: PropTypes.number, //当移动坐标轴时格式化显示小数位数
+    showMovePiece: PropTypes.bool, //是否显示调节块
     option: PropTypes.object, //图表option
     extraOption: PropTypes.object, //图表额外配置
     elStyle: PropTypes.object, //图表容器样式
@@ -22,6 +28,9 @@ export default class ECharts extends React.Component {
     legendMode: PropTypes.string //图例显示选项,可选show一直显示,hover鼠标悬浮显示,none不显示,
   };
   static defaultProps = {
+    xAxisFixedNumber: 0,
+    yAxisFixedNumber: 0,
+    showMovePiece: true,
     option: {},
     extraOption: { notMerge: true },
     elStyle: {},
@@ -35,6 +44,7 @@ export default class ECharts extends React.Component {
   };
   initChart() {
     const {
+      showMovePiece,
       option,
       extraOption,
       theme,
@@ -73,6 +83,52 @@ export default class ECharts extends React.Component {
         option.legend.show = false;
       }
     }
+    this.option = option;
+    //绑定移动事件
+    this.xMoveInfo = null;
+    this.yMoveInfo = null;
+    if (showMovePiece) {
+      if (
+        option.xAxis &&
+        !(option.xAxis instanceof Array) &&
+        option.xAxis.type === "value"
+      ) {
+        self.xMoveInfo = [];
+        let func =
+          (option.xAxis.axisLabel && option.xAxis.axisLabel.formatter) ||
+          function(v) {
+            return v.toString().replace(/(\d)(?=(?:\d{3})+$)/g, "$1,");
+          };
+        option.xAxis.axisLabel = {
+          ...option.xAxis.axisLabel,
+          formatter(v, i) {
+            if (i === 0) self.yMoveInfo = [];
+            self.xMoveInfo.push(v);
+            return func(v, i);
+          }
+        };
+      }
+      if (
+        option.yAxis &&
+        !(option.yAxis instanceof Array) &&
+        option.yAxis.type !== "category"
+      ) {
+        self.yMoveInfo = [];
+        let func =
+          (option.yAxis.axisLabel && option.yAxis.axisLabel.formatter) ||
+          function(v) {
+            return v.toString().replace(/(\d)(?=(?:\d{3})+$)/g, "$1,");
+          };
+        option.yAxis.axisLabel = {
+          ...option.yAxis.axisLabel,
+          formatter(v, i) {
+            if (i === 0) self.yMoveInfo = [];
+            self.yMoveInfo.push(v);
+            return func(v, i);
+          }
+        };
+      }
+    }
     //设置options
     myChart.setOption(option, extraOption);
     //绑定事件
@@ -86,17 +142,9 @@ export default class ECharts extends React.Component {
       myChart.resize();
     }
     $(window).resize(() => {
-      this.throttle(resizeChart, 80);
+      this.throttle(resizeChart, 100);
     });
   }
-  //函数节流方法,用于window.resize()避免无限的resize()执行
-  throttle(method, timeout, context) {
-    clearTimeout(method.tId);
-    method.tId = setTimeout(() => {
-      method.call(context);
-    }, timeout);
-  }
-  4;
   handleFullScreen(self) {
     self.setState({ isFullScreen: !self.state.isFullScreen });
     function resizeChart(time) {
@@ -150,18 +198,76 @@ export default class ECharts extends React.Component {
     //返回实例化后的chart引用,从而触发dispatchAction等方法
     return this.chart;
   }
+  handleMovePieceAction(e) {
+    let { xAxisFixedNumber, yAxisFixedNumber } = this.props;
+    let { clientX, clientY } = e;
+    this.allowMove = true;
+    document.querySelector("body").onmousemove = e1 => {
+      if (this.allowMove) {
+        let { clientX: clientX1, clientY: clientY1 } = e1;
+        this.movePiece.style.left = clientX1 - clientX + "px";
+        this.movePiece.style.bottom = clientY - clientY1 + "px";
+      }
+      this.movePiece.onmouseup = e2 => {
+        let { clientX: clientX1, clientY: clientY1 } = e2;
+        let diffX = clientX1 - clientX,
+          diffY = clientY - clientY1;
+        let chartWidth = this.chart.getWidth(),
+          chartHeight = this.chart.getHeight();
+        if (this.xMoveInfo && Math.abs(diffX) > Math.abs(diffY)) {
+          let min =
+            this.xMoveInfo[0] +
+            diffX /
+              chartWidth *
+              (this.xMoveInfo[this.xMoveInfo.length - 1] - this.xMoveInfo[0]);
+          this.chart.setOption(
+            {
+              xAxis: {
+                ...this.option.xAxis,
+                min: min.toFixed(xAxisFixedNumber)
+              }
+            },
+            { notMerge: false }
+          );
+        } else if (this.yMoveInfo && Math.abs(diffX) < Math.abs(diffY)) {
+          let min =
+            this.yMoveInfo[0] +
+            diffY /
+              chartHeight *
+              (this.yMoveInfo[this.yMoveInfo.length - 1] - this.yMoveInfo[0]);
+          this.chart.setOption(
+            {
+              yAxis: {
+                ...this.option.yAxis,
+                min: min.toFixed(yAxisFixedNumber)
+              }
+            },
+            { notMerge: false }
+          );
+        }
+        this.allowMove = false;
+        this.movePiece.style.left = "0px";
+        this.movePiece.style.bottom = "0px";
+      };
+    };
+  }
+ //函数节流方法,用于window.resize()避免无限的resize()执行
+  throttle(method, timeout, context) {
+    clearTimeout(method.tId);
+    method.tId = setTimeout(() => {
+      method.call(context);
+    }, timeout);
+  }
   componentDidMount() {
     this.initChart();
   }
-
   componentDidUpdate() {
     this.initChart();
   }
-
   render() {
-    const { elStyle } = this.props;
+    const { elStyle, showMovePiece, option } = this.props;
     elStyle.position = elStyle.position || "relative";
-    const { isFullScreen, width, height } = this.state;
+    const { isFullScreen } = this.state;
     return (
       <div
         onMouseEnter={this.handleOver.bind(this)}
@@ -182,6 +288,33 @@ export default class ECharts extends React.Component {
           )
         }
       >
+        {showMovePiece &&
+        (option.xAxis &&
+          ((!(option.xAxis instanceof Array) &&
+            option.xAxis.type === "value") ||
+            (!(option.yAxis instanceof Array) &&
+              option.yAxis.type !== "category"))) ? (
+          <div
+            className={styles.movePiece}
+            onDoubleClick={e => {
+              this.allowMove = false;
+              this.chart.setOption(this.option, { notMerge: true });
+            }}
+            onMouseDown={this.handleMovePieceAction}
+            ref={ID => (this.movePiece = ID)}
+          />
+        ) : null}
+        {showMovePiece &&
+        (option.xAxis &&
+          ((!(option.xAxis instanceof Array) &&
+            option.xAxis.type === "value") ||
+            (!(option.yAxis instanceof Array) &&
+              option.yAxis.type !== "category"))) ? (
+          <div
+            className={styles.referPiece}
+            ref={ID => (this.referPiece = ID)}
+          />
+        ) : null}
         <div
           ref={ID => (this.ID = ID)}
           style={{ width: "100%", height: "100%" }}
