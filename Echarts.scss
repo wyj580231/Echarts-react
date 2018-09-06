@@ -1,0 +1,28 @@
+.movePiece {
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  background-color: #1890ff;
+  z-index: 3;
+  cursor: move;
+  opacity: 0.1;
+  transform: rotate(45deg);
+  &:hover {
+    opacity: 0.6;
+    z-index: 999999;
+  }
+}
+.referPiece {
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  background-color: #1890ff;
+  z-index: 2;
+  cursor: move;
+  opacity: 0.1;
+  transform: rotate(45deg);
+}
